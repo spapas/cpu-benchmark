@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+  <title> </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+  <script src="alpine.js" defer></script>
+
+  <body class="flex flex-col min-h-screen ">
+
+  <header class="py-6  bg-gray-200">
+    <div class="flex justify-center">
+        <h1 class='font-bold text-4xl'>CPU List</h1>
+    </div>
+    <div class="flex justify-center py-2">
+        <h3 class='font-bold text-xl'>A list of CPUs and their Passmark benchmark scores</h3>
+    </div>
+
+  </header>
+
+
+  <main x-data="data()" x-init="loadCPUs()" class="flex-grow">
+    <div class='loading' x-show='loading'>LOADING</div>
+    <div class="max-w-max mx-auto p-6">
+      <div class="py-3">
+        <label class="font-bold" for='filter'>Filter:</label>
+        <input name='filter' x-model='filter' @input="filterCPUs()"
+        class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        />
+    </div> <!-- end of py-3 -->
+<div class='flex border justify-between'>
+  <table class="table-auto w-1/3 p-2">
+    <thead>
+      <tr class='border'>
+        <th class="px-2 py-2">CPU Name</th>
+        <th class="px-2 py-2">CPU Mark</th>
+        <th class="px-2 py-2">Thread Rating</th>
+      </tr>
+    </thead>
+    <tbody>
+      <template x-for="cpu in pcpus" :key="cpu.name">
+        <tr>
+          <td class="px-2 py-2 border" >
+            <span x-text="cpu.name"></span>
+            <button
+              class="font-bold rounded-sm bg-blue-500 text-white hover:bg-blue-700 leading-5 h-5 w-5"
+              @click="addCompareCPU(cpu.name)">+</button>
+          </td>
+          <td class="px-2 py-2 border" x-text="cpu.cpumark"></td>
+          <td class="px-2 py-2 border" x-text="cpu.thread"></td>
+        </tr>
+      </template>
+    </tbody>
+  </table>
+  <div class='w-2/3 p-2 bourder'>
+    <h3 class='font-bold text-xl'>Compare</h3>
+    <table class="table-auto">
+    <thead>
+      <tr class='border'>
+        <th class="px-2 py-2">CPU Name</th>
+        <th class="px-2 py-2">CPU Mark</th>
+        <th class="px-2 py-2">Thread Rating</th>
+        <th class="px-2 py-2">Info</th>
+        <th class="px-2 py-2">Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <template x-for="cpu in ccpus" :key="cpu.name">
+        <tr>
+          <td class="px-4 py-2 border " >
+            <span x-text="cpu.name"></span>
+            <button
+              class="font-bold rounded-sm bg-blue-500 text-white hover:bg-blue-700 leading-5 h-5 w-5"
+              @click="removeCompareCPU(cpu.name)">-</button>
+          </td>
+          <td class="px-2 py-2 border " x-text="cpu.cpumark"></td>
+          <td class="px-2 py-2 border " x-text="cpu.thread"></td>
+          <td class="px-2 py-2 border " x-text="cpuInfo(cpu)"></td>
+          <td class="px-2 py-2 border " >
+            <textarea name='notes' x-model='cpu.notes' @blur="cpuNotes()" rows="4" cols="8"
+            class="font-bold shadow appearance-none border rounded py-2 px-1 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            ></textarea>
+          </td>
+        </tr>
+      </template>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<button
+  :disabled="page==0"
+  :class="{ 'bg-blue-900': page==0, 'hover:bg-blue-900': page==0 }"
+  class="font-bold py-2 px-4 rounded bg-blue-500 text-white hover:bg-blue-700"
+  @click="prevPage()"><</button>
+<span x-text="page"></span>
+
+<button
+  :disabled="page==Math.round((fcpus.length-1)/per_page)"
+  :class="{ 'bg-blue-900': page==Math.round((fcpus.length-1)/per_page), 'hover:bg-blue-900': page==Math.round((fcpus.length-1)/per_page) }"
+  class="font-bold py-2 px-4 rounded bg-blue-500 text-white hover:bg-blue-700"
+  @click="nextPage()">></button>
+    </div>
+  </main>
+
+  <footer class='py-2 px-3 bg-gray-200'>
+    Build with
+    <a
+    class="font-bold text-blue-600 hover:text-blue-800 underline"
+    href='https://tailwindcss.com/'>https://tailwindcss.com/</a> and
+    <a
+    class="font-bold text-blue-600 hover:text-blue-800 underline"
+    href='https://github.com/alpinejs/alpine'>https://github.com/alpinejs/alpine</a><br />
+    CPUs list from Passmark Software
+    <a
+    class="font-bold text-blue-600 hover:text-blue-800 underline"
+    href='https://www.cpubenchmark.net'
+    >https://www.cpubenchmark.net</a>
+  </footer>
+  </body>
+  <script>
+
+
+    let data = () => {
+        let that = this;
+
+        return {
+            loading: true,
+            cpus: [],
+            fcpus: [],
+            ccpus: [],
+            pcpus: [],
+            page: 0,
+            filter: '',
+            per_page: 10,
+            nextPage() {
+              this.page += 1
+              this.pcpus = this.fcpus.slice(this.page*this.per_page, (this.page+1)*this.per_page)
+            },
+            prevPage() {
+              this.page -= 1
+              this.pcpus = this.fcpus.slice(this.page*this.per_page, (this.page+1)*this.per_page)
+            },
+            filterCPUs() {
+              this.page = 0;
+              this.fcpus = this.cpus.filter(z => z.name.indexOf(this.filter)>=0)
+              this.pcpus = this.fcpus.slice(this.page*this.per_page, (this.page+1)*this.per_page)
+            },
+            cpuInfo(cpu) {
+              return `TDP: ${cpu.tdp}, Date: ${cpu.date}, Socket: ${cpu.socket}, Cores: ${cpu.cores}, Logicals: ${cpu.logicals}, CPU count: ${cpu.cpuCount}, Samples: ${cpu.samples}`
+            },
+            clearFilter() {
+              this.fcpus=this.cpus;
+              this.page=0;
+              this.filter='';
+            },
+            addCompareCPU(cpuname) {
+              let cpu = this.fcpus.filter(function(cc) { return cc.name==cpuname })[0]
+              cpu.notes = ''
+              if(this.ccpus.indexOf(cpu)==-1) this.ccpus.push(cpu)
+              this.ccpus.sort(function(c1, c2) {
+                return Number(c2.cpu_mark) - Number(c1.cpu_mark)
+              })
+              this.setLocalStorage()
+            },
+            removeCompareCPU(cpu) {
+              this.ccpus.splice(this.ccpus.indexOf(cpu), 1)
+              this.setLocalStorage()
+            },
+            cpuNotes() {
+              this.setLocalStorage();
+            },
+            setLocalStorage() {
+              window.localStorage.setItem('cpus', JSON.stringify(this.ccpus))
+            },
+            getLocalStorage() {
+              let cpusjson = window.localStorage.getItem('cpus')
+              if(cpusjson) {
+               this.ccpus = JSON.parse(cpusjson)
+              } else {
+                this.ccpus = []
+              }
+            },
+            loadCPUs() {
+              console.log("Loading CPUs")
+              this.getLocalStorage();
+              fetch('./cpus.json').then(response => response.json())
+                .then(data => {
+                 console.log(this.cpus)
+                  this.cpus = data;
+                  this.fcpus = this.cpus;
+                  this.pcpus = this.fcpus.slice(this.page*this.per_page, (this.page+1)*this.per_page)
+                  this.loading = false;
+                })
+            }
+        }
+    }
+
+
+
+  ////////////////////////
+  // Add a konami code from: https://stackoverflow.com/a/31627191/119071
+  //////////////////////////
+
+  // a key map of allowed keys
+  var allowedKeys = {
+    37: 'left',
+    38: 'up',
+    39: 'right',
+    40: 'down',
+    65: 'a',
+    66: 'b'
+  };
+
+  // Only use arrows for now
+  var konamiCode = ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'up', 'down'];
+
+  // a variable to remember the 'position' the user has reached so far.
+  var konamiCodePosition = 0;
+
+  // add keydown event listener
+  document.addEventListener('keydown', function(e) {
+    // get the value of the key code from the key map
+    var key = allowedKeys[e.keyCode];
+    // get the value of the required key from the konami code
+    var requiredKey = konamiCode[konamiCodePosition];
+    // compare the key with the required key
+    if (key == requiredKey) {
+      // move to the next key in the konami code sequence
+      konamiCodePosition++;
+      // if the last key is reached, activate cheats
+      if (konamiCodePosition == konamiCode.length) {
+        activateCheats();
+        konamiCodePosition = 0;
+      }
+    } else {
+      konamiCodePosition = 0;
+    }
+  });
+
+  function activateCheats() {
+    document.body.style.backgroundColor = "#298312";
+    alert("cheats activated");
+  }
+
+  </script>
+</html>
