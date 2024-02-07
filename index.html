@@ -44,8 +44,13 @@
           <td class="px-2 py-2 border" >
             <span x-text="cpu.name"></span>
             <button
-              class="font-bold rounded-sm bg-blue-500 text-white hover:bg-blue-700 leading-5 h-5 w-5"
-              @click="addCompareCPU(cpu.name)">+</button>
+              class="font-bold rounded-sm bg-blue-500 text-white hover:bg-blue-700 leading-5 h-6 w-6"
+              @click="addCompareCPU(cpu.name)">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              
+            </button>
           </td>
           <td class="px-2 py-2 border" x-text="cpu.cpumark"></td>
           <td class="px-2 py-2 border" x-text="cpu.thread"></td>
@@ -71,8 +76,13 @@
           <td class="px-4 py-2 border " >
             <span x-text="cpu.name"></span>
             <button
-              class="font-bold rounded-sm bg-blue-500 text-white hover:bg-blue-700 leading-5 h-5 w-5"
-              @click="removeCompareCPU(cpu.name)">-</button>
+              class="font-bold rounded-sm bg-blue-500 text-white hover:bg-blue-700 leading-5 h-6 w-6"
+              @click="removeCompareCPU(cpu.name)">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+              </svg>
+              
+            </button>
           </td>
           <td class="px-2 py-2 border " x-text="cpu.cpumark"></td>
           <td class="px-2 py-2 border " x-text="cpu.thread"></td>
@@ -93,14 +103,25 @@
   :disabled="page==0"
   :class="{ 'bg-blue-900': page==0, 'hover:bg-blue-900': page==0 }"
   class="font-bold py-2 px-4 rounded bg-blue-500 text-white hover:bg-blue-700"
-  @click="prevPage()"><</button>
+  @click="prevPage()">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+  </svg>
+  
+</button>
 <span x-text="page"></span>
 
 <button
   :disabled="page==Math.round((fcpus.length-1)/per_page)"
   :class="{ 'bg-blue-900': page==Math.round((fcpus.length-1)/per_page), 'hover:bg-blue-900': page==Math.round((fcpus.length-1)/per_page) }"
   class="font-bold py-2 px-4 rounded bg-blue-500 text-white hover:bg-blue-700"
-  @click="nextPage()">></button>
+  @click="nextPage()">
+
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+  </svg>
+  
+</button>
     </div>
   </main>
 
@@ -185,10 +206,10 @@
             loadCPUs() {
               console.log("Loading CPUs")
               this.getLocalStorage();
-              fetch('./cpus.json').then(response => response.json())
+              fetch('./cpus2a.json').then(response => response.json())
                 .then(data => {
-                 console.log(this.cpus)
-                  this.cpus = data;
+                  console.log(data.data)
+                  this.cpus = data.data;
                   this.fcpus = this.cpus;
                   this.pcpus = this.fcpus.slice(this.page*this.per_page, (this.page+1)*this.per_page)
                   this.loading = false;
